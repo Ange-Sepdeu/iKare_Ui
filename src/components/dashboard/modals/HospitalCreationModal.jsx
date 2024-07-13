@@ -27,25 +27,13 @@ function HospitalCreationModal({isOpen}) {
       <div className='text-3xl cursor-pointer font-semibold flex flex-row justify-between mb-5'>
                {
                   activeIndex === 0 ? 
-                  <div>Hospital Details</div> :
-                  <div>Admin Details</div> 
+                  <div>Book an Appointment</div> :
+                  <div>Appointment Details</div> 
                }
               <Close onClick={() => setIsOpened(!isOpened)} />
              </div>
                { activeIndex === 0 && <Hospital />}
                { activeIndex === 1 && <AdminStep /> }
-              {
-               activeIndex === 0 && <Button
-               onClick={handleNext}
-               variant="contained" color="success">save and continue</Button>
-              }{
-                 activeIndex === 1 && 
-                  <div className=' flex flex-row justify-between'>
-                 <Button 
-                 onClick={handlePrev} variant="contained" color="warning">PREV</Button>
-                 <Button type="submit" color="primary" variant='contained'>Create</Button>
-                 </div>
-               }
               </div> }
     </>
     
