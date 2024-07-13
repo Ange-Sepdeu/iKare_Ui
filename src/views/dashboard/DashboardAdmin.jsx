@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useState } from 'react'
 import Sidebar from '../../components/dashboard/sidebar/Sidebar'
 import Navbar from '../../components/dashboard/navbar/Navbar'
 import Overview from '../../components/dashboard/main/Overview'
-import Admin from "../../components/dashboard/main/Admin";
+import Admin from "../../components/dashboard/main/Appointments";
 import Patient from "../../components/dashboard/main/Patient";
-import HealthProfessional from "../../components/dashboard/main/HealthProfessional"
+import HealthProfessional from "../../components/dashboard/main/Consultations"
 import Notifications from "../../components/dashboard/main/Notifications"
 import Cashier from "../../components/dashboard/main/Cashier"
 import Pharmacies from "../../components/dashboard/main/Pharmacies"
@@ -13,19 +13,22 @@ import Emergency  from "../../components/dashboard/main/Emergency"
 import Chat from "../../components/dashboard/main/Chat"
 import Settings from "../../components/dashboard/main/Settings"
 import { UpdateContext } from '../../utils/context/UpdateContext';
+import { useNavigate } from 'react-router-dom';
 
 function DashboardAdmin() {
+    const navigate = useNavigate()
     const {activeTab, setActiveTab} = useContext(UpdateContext)
     useEffect(() => {
-      console.log(activeTab)
-    }, [activeTab])
+      if (localStorage.getItem("token") == null)
+        navigate("/login")
+    })
   return (
     <>
         <div className='flex bg-[#F3F1F1] flex-row justify-between w-full p-2'>
-            <div className='w-[15%]'>
+            <div className='w-[18%]'>
             <Sidebar />
             </div>
-            <div className='w-[83%] flex flex-col justify-between'>
+            <div className='w-[80%] flex flex-col justify-between'>
                 <div>
                    <Navbar />
                 </div>

@@ -38,3 +38,5 @@ export const Data = [
 
 
 ]
+
+export const GOOGLE_MAPS_API_KEY = "AIzaSyCSfUjNQwuyGyxpU7Xb84bXVyblkWzNc3o"

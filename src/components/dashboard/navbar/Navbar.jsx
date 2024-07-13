@@ -1,9 +1,21 @@
 import { AccountCircleOutlined, AdminPanelSettings, Search, Settings, Notifications } from '@mui/icons-material'
-import React, {useContext} from 'react'
+import React, {useContext, useState, useEffect} from 'react'
 import { UpdateContext } from '../../../utils/context/UpdateContext'
+import {useNavigate} from "react-router-dom"
 
 function Navbar() {
   const {setActiveTab} = useContext(UpdateContext)
+  const [activeUser, setActiveUser] = useState(null)
+  const navigate = useNavigate()
+  useEffect(() => {
+      if (JSON.parse(localStorage.getItem("user"))) {
+        const activeUser = JSON.parse(localStorage.getItem("user"))
+        setActiveUser(activeUser)
+      }
+      else {
+        navigate("/login")
+      }
+  })
   return (
     <>
         <div className='flex bg-white border-box p-2 flex-row justify-between sticky items-center w-full'>
@@ -20,8 +32,8 @@ function Navbar() {
               <div className='flex text-gray-600 cursor-pointer flex-row w-[20%] font-semibold justify-between items-center'>
                     <AccountCircleOutlined style={{fontSize: "30px"}} />
                      <div>
-                        <div className='text-sm'>chriskameni25@gmail.com</div>
-                        <div className='text-sm'>Chris Kameni</div>
+                        <div className='text-sm'>{activeUser?.email}</div>
+                        <div className='text-sm'>{activeUser?.fullname}</div>
                      </div>
               </div>
         </div>

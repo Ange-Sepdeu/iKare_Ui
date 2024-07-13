@@ -2,8 +2,8 @@ import React from 'react'
 
 function FormButton(props) {
   return (
-    <>
       <button
+      type='submit'
        onClick={props.onClickHandler}
        className='
        xs: w-full
@@ -14,7 +14,6 @@ function FormButton(props) {
        hover:text-white  
        p-2 bg-white text-[#0C3778] 
        font-bold'>{props.value}</button>
-    </>
   )
 }
 

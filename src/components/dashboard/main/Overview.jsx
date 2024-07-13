@@ -1,16 +1,28 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import RoundedCard from '../cards/RoundedCard'
 import NormalCard from '../cards/NormalCard'
-import { BarChartOutlined, EmergencyRecording, EmergencyShare, ErrorOutlineOutlined, ErrorRounded, TrendingFlat, TrendingUp, TrendingUpOutlined } from '@mui/icons-material'
+import { ErrorRounded, TrendingUp, TrendingUpOutlined } from '@mui/icons-material'
+import { useNavigate } from 'react-router-dom'
 
 function Overview() {
+  const [activeUser, setActiveUser] = useState(null)
+  const navigate = useNavigate()
+  useEffect(() => {
+      if (JSON.parse(localStorage.getItem("user"))) {
+        const activeUser = JSON.parse(localStorage.getItem("user"))
+        setActiveUser(activeUser)
+      }
+      else {
+        navigate("/login")
+      }
+  })
   return (
     <>
-      <div className='text-3xl mt-5 mb-5 font-bold'>Welcome back, Chris</div>
+      <div className='text-3xl mt-5 mb-5 font-bold'>Welcome back, {activeUser?.fullname}</div>
        <div className='w-full h-[30vh] mb-5 flex flex-row justify-between flex-wrap'>
           <div className='w-[24%] h-full'>
           <RoundedCard 
-           header="Overall users"
+           header="Consultations"
            number={10.525}
            pendingText="1100 accounts awaiting validations"
            accountsToday="125 today"
@@ -18,8 +30,8 @@ function Overview() {
           </div>
           <div className='w-[24%] h-full'>
           <NormalCard 
-          header="Total Patients"
-          number={5.175}
+          header="Total Appointments"
+          number={5}
           pendingText="1100 accounts awaiting validations"
           accountsToday="125 today"
           increase="+10.5%"
@@ -30,7 +42,7 @@ function Overview() {
           </div>
           <div className='w-[24%]'>
           <NormalCard 
-          header="H. Professionals"
+          header="Follow-up forms"
           number={500}
           pendingText="50 accounts"
           accountsToday="5 today"
