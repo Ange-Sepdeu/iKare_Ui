@@ -1,6 +1,7 @@
 import React from 'react'
 import { LocalPhone, MoreVert, Search } from '@mui/icons-material'
 import "../../../css/header.css"
+import { Avatar } from '@mui/material'
 
 
 function Header({image, name, lastSeen}) {
@@ -8,7 +9,12 @@ function Header({image, name, lastSeen}) {
     <>
         <div className="header-main">
             <div className="header-left">
-                <img src={image} alt="Current User"/>
+                {
+                  image ?
+                  <img src={image} alt="Current User"/>
+                  :
+                  <Avatar />
+                }
                  <div className="top-header-left">
                     <div className='top-header-name'>{name}</div>
                   <div className="last-seen">{lastSeen}</div>

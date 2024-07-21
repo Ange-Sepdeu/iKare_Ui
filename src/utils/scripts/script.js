@@ -29,10 +29,10 @@ export const extractHour = (date) =>
 }
 
 export const sortContacts = (contactArray) => {
-    contactArray.sort((a, b) => 
+    contactArray?.sort((a, b) => 
     {
-    const length1 = extractHour(a.conversation[a.conversation.length-1].time)
-    const length2 = extractHour(b.conversation[b.conversation.length-1].time)
+    const length1 = extractHour(a?.time)
+    const length2 = extractHour(b?.time)
     if( length1 < length2) 
     return 1
     else if(length1 > length2) 
@@ -51,7 +51,7 @@ export const searchContactFromChat = (entered, contactList) => {
 export const unShiftContacts = (contactArray, currentUserId) => {
     for(let i=0;i<contactArray.length;i++)
     {
-        if(contactArray[i].id == currentUserId)
+        if(contactArray[i]._id == currentUserId)
         {
             contactArray.unshift(contactArray[i])
             contactArray.splice(i+1, 1)

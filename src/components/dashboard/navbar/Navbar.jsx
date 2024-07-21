@@ -6,6 +6,7 @@ import {useNavigate} from "react-router-dom"
 function Navbar() {
   const {setActiveTab} = useContext(UpdateContext)
   const [activeUser, setActiveUser] = useState(null)
+  const token = localStorage.getItem("token")
   const navigate = useNavigate()
   useEffect(() => {
       if (JSON.parse(localStorage.getItem("user"))) {
@@ -15,7 +16,7 @@ function Navbar() {
       else {
         navigate("/login")
       }
-  })
+  }, [token])
   return (
     <>
         <div className='flex bg-white border-box p-2 flex-row justify-between sticky items-center w-full'>

@@ -3,10 +3,11 @@ import "../../../css/messageContainer.css"
 import MessageContainerDirection from './MessageContainerDirection'
 
 function MessageContainer({message, time, senderId}) {
+    const activeUser = JSON.parse(localStorage.getItem("user"))
   return (
         <>
             {
-                senderId != 3 ? 
+                senderId != activeUser?._id ? 
             <div className="container">
                 <MessageContainerDirection 
                 time={time} 

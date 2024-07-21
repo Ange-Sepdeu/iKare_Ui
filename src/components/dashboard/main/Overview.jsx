@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 
 function Overview() {
   const [activeUser, setActiveUser] = useState(null)
+  const token = localStorage.getItem("token")
   const navigate = useNavigate()
   useEffect(() => {
       if (JSON.parse(localStorage.getItem("user"))) {
@@ -15,7 +16,7 @@ function Overview() {
       else {
         navigate("/login")
       }
-  })
+  }, [token])
   return (
     <>
       <div className='text-3xl mt-5 mb-5 font-bold'>Welcome back, {activeUser?.fullname}</div>
