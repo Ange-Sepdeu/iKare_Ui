@@ -7,6 +7,8 @@ import { sortContacts, searchContactFromChat } from '../../../utils/scripts/scri
 import { UpdateContext } from '../../../utils/context/UpdateContext'
 import { IconButton, Dialog, Avatar, breadcrumbsClasses } from '@mui/material';
 import { Add, Close } from '@mui/icons-material';
+import {useQuery, useQueryClient} from "@tanstack/react-query"
+import { Spinner } from 'reactstrap';
 
 function ContactContainer({setCurrentContact}) {
     const {setCurrentUser, currentContactOrder, currentUser} = useContext(UpdateContext)
@@ -15,99 +17,33 @@ function ContactContainer({setCurrentContact}) {
 
    const userRole = localStorage.getItem("role");
    const activeUser = JSON.parse(localStorage.getItem("user"));
-   const getOtherUsers = () => {
+   const getOtherUsers = async() => {
       const url = "/api/user/get-users";
-      axiosInstance.get(url)
-      .then(response => {
+      try {
+          const response = await axiosInstance.get(url)
           const dbUsers = response.data.data;
           const contacts = [...dbUsers].filter(dbUser => dbUser?._id != activeUser?._id)
           const chattedContact = []
         contacts.forEach(contact => {
           let notifs = contact?.notifications.filter(notifs => (notifs.sender === activeUser?._id || notifs.receiver === activeUser?._id))
-          console.log(notifs)
+          let unRead = notifs?.filter(not => (not.status == "PENDING" && not?.receiver==activeUser?._id))
           if (notifs?.length > 0)
           {
             const lastNotif = notifs[notifs.length-1]
-            chattedContact.push({...contact, lastNotif})
+            chattedContact.push({...contact, lastNotif, unReadMessages:unRead?.length})
           }
     })
-      console.log("Chatted Contact :", chattedContact)
-      setChattedContact(chattedContact)
-          setContacts(contacts)
-      })
-      .catch(error => console.log(error))
-   }
-   const getPatient = () => {
-      const url = "/api/user/get-singleuser";
-      axiosInstance.post(url, {id: activeUser._id})
-      .then(response => {
-        const notifications = response.data?.data.notifications
-        var cachedIndex;
-        var ext, int;
-        var unReadMessages
-        var lastMessage
-        for (ext=0; ext<notifications?.length;ext++){
-                unReadMessages = 0
-                lastMessage = ""
-            for (int=0; int<ext;int++){
-              // if ((notifications[ext]?.sender == notifications[int]?.sender) || (notifications[ext]?.sender == notifications[int]?.receiver))
-              //   {
-                    cachedIndex = int
-                    if (notifications[int]?.status == "PENDING")
-                      ++unReadMessages
-                    break;
-                // }
-            }
-            if(ext==int)
-            {
-                lastMessage = notifications[cachedIndex-1]?.message
-                const time = notifications[cachedIndex-1]?.date
-                let singleContact = [...contacts].find(contact => contact?._id == notifications[ext]?.sender)
-                setChattedContact((state) => [...state, {...singleContact, lastMessage, unReadMessages, time}])
-            }
-        }
-        console.log(chattedContact)
-      })
-      .catch(error => console.log(error.message))
-   }
-   const getDoctor = () => {
-    const url = "/api/user/get-singleuser";
-    axiosInstance.post(url, {id: activeUser._id, hospitalName: JSON.parse(localStorage.getItem("hospital")).name})
-    .then(response => {
-      const notifications = response.data?.data.notifications
-      var cachedIndex;
-      var ext, int
-      for (ext=0; ext<notifications?.length;ext++){
-              var unReadMessages = 0
-              var lastMessage = ""
-          for (int=0; int<ext;int++){
-            if ((notifications[ext]?.sender === notifications[int]?.sender) || (notifications[ext]?.sender === notifications[int]?.receiver))
-            {
-                cachedIndex = int
-                if (notifications[int]?.status === "PENDING")
-                  ++unReadMessages
-                break;
-            }
-          }
-          if(ext==int)
-          {
-              lastMessage = notifications[cachedIndex-1]?.message
-              const time = notifications[cachedIndex-1]?.date
-              let singleContact = [...contacts].find(contact => contact?._id == notifications[ext]?.sender)
-              setChattedContact([...chattedContact, {...singleContact, lastMessage, unReadMessages, time}])
-          }
+    console.log("Chatted Contact :", chattedContact)
+    setContacts(contacts)
+    return chattedContact
       }
-    })
-    .catch(error => console.log(error.message))
+      catch(error) {
+        console.log(error)
+      }
    }
-
-   useEffect(() => {
-      getOtherUsers()
-      if (userRole === "PATIENT")
-        getPatient()
-      else
-        getDoctor()
-   })
+   const queryClient = useQueryClient()
+   queryClient.invalidateQueries({queryKey: ["contact"]})
+   const {data, isLoading, isError, error} = useQuery({queryKey: ["contact"], queryFn: getOtherUsers, networkMode: "always"})
    const [openDialog, setOpenDialog] = useState(false);
    const toggleContactDialog = () => {
       setOpenDialog(!openDialog)
@@ -133,11 +69,16 @@ function ContactContainer({setCurrentContact}) {
               <Close />
             </IconButton>
         </div>
-        <div className='px-8 py-4 h-[70vh] overflow-auto'>
-          <div className='text-[20px] font-semibold mb-5'>Select a contact to discuss with</div>
+        <div className='px-4 py-2 h-[70vh] overflow-auto'>
+          <div className='text-[20px] font-semibold mb-1'>Select a contact to discuss with</div>
           {
+            isLoading  ?
+            <div className='text-center font-semibold text-teal-800'>
+                Please wait <Spinner size={28} style={{textAlign: "center", color: "teal"}} />
+            </div>
+            :
             [...contacts].map(contact => (
-                <div onClick={() => {setCurrentUser(contact); setCurrentContact(contact); toggleContactDialog()}} className='p-4 bg-gray-50 hover:text-white hover:bg-gray-100 border-b-2 border-b-teal-900 cursor-pointer flex justify-left items-center gap-8'>
+                <div onClick={() => {setCurrentUser(contact); setCurrentContact(contact); toggleContactDialog()}} className='p-2 mt-1 bg-gray-50 hover:text-white hover:bg-gray-100 border-b-2 border-b-teal-900 cursor-pointer flex justify-left items-center gap-4'>
                   <div>
                   {
                     contact?.image ? <img src={contact?.image} alt="Contact Image" />
@@ -153,10 +94,18 @@ function ContactContainer({setCurrentContact}) {
     <div className="contact-container">
         <div className="below-contacts">
         {
-            [...chattedContact].length === 0 ?
+          isLoading  ?
+          <div className='text-center mt-5 font-semiobld text-teal-800'>
+              Please wait <Spinner size={28} style={{textAlign: "center", color: "teal"}} />
+          </div>
+          :
+          //   isError ?
+          //   <div>{error.message}</div>
+          // :
+            data?.length === 0 ?
               <div className='px-4 py-2 twxt-center text-[18px] w-full font-semibold'>No message at the moment</div>
             :
-            [...chattedContact]?.map((contact) => {
+            data?.map((contact) => {
                 return(
                     <div
                      key={contact._id}
@@ -177,9 +126,9 @@ function ContactContainer({setCurrentContact}) {
                 );
             })
         }
-        <div className='absolute bottom-5 left-[35%]'>
+        <div className='absolute bottom-2 left-[37%]'>
             <IconButton onClick={toggleContactDialog} sx={{backgroundColor: "teal", color:"white"}}>
-                <Add sx={{fontSize: '36px'}} />
+                <Add sx={{fontSize: '28px'}} />
             </IconButton>
         </div>
         </div>

@@ -11,46 +11,49 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import axiosInstance from './utils/axiosInstance/axiosInstance'
 import DetailInfrastructure from './components/dashboard/main/DetailInfrastructure'
 import { Close } from '@mui/icons-material'
-import { QueryClient, QueryClientProvider} from 'react-query'
+import {useQuery} from 'react-query'
+import Prescription from './components/dashboard/main/Prescription'
 
-const queryClient = new QueryClient()
 function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [contacts, setContacts] = useState([]);
-    const [chattedContact, setChattedContact] = useState([])
-
-   const userRole = localStorage.getItem("role");
-   const activeUser = JSON.parse(localStorage.getItem("user"));
-  const getPatient = () => {
-    const url = "/api/user/get-singleuser";
-    axiosInstance.post(url, {id: activeUser?._id})
-    .then(response => {
-      const notifications = response.data?.data.notifications
-      var cachedIndex;
-    })
-    .catch(error => console.log(error.message))
- }
- const getDoctor = () => {
-  const url = "/api/user/get-singleuser";
-  axiosInstance.post(url, {id: activeUser?._id, hospitalName: JSON.parse(localStorage.getItem("hospital"))?.name})
-  .then(response => {
-    const notifications = response.data?.data.notifications
-    var cachedIndex, ext, int;
+  const userRole = localStorage.getItem("role");
+  const activeUser = JSON.parse(localStorage.getItem("user"));
+  const [data, setData] = useState([])
+  const getOtherUsers = async() => {
+    const url = "/api/user/get-users";
+    try {
+        const response = await axiosInstance.get(url)
+        const dbUsers = response.data.data;
+        const contacts = [...dbUsers].filter(dbUser => dbUser?._id != activeUser?._id)
+        const chattedContact = []
+        contacts.forEach(contact => {
+        let notifs = contact?.notifications.filter(notifs => (notifs.sender === activeUser?._id || notifs.receiver === activeUser?._id))
+        console.log(notifs)
+        if (notifs?.length > 0)
+        {
+          const lastNotif = notifs[notifs.length-1]
+          chattedContact.push({...contact, lastNotif})
+        }
   })
-  .catch(error => console.log(error.message))
+  console.log("Chatted Contact :", chattedContact)
+  setContacts(contacts)
+  setData(chattedContact)
+  // return chattedContact
+    }
+    catch(error) {
+      console.log(error)
+    }
  }
-
  useEffect(() => {
-    if (userRole === "PATIENT")
-      getPatient()
-    else
-      getDoctor()
+      getOtherUsers()  
  })
-  const [ currentUser, setCurrentUser] = useState(sortContacts(contacts)[0]?._id == activeUser?._id ? sortContacts(contacts)[1] : sortContacts(contacts)[0])
-  const [currentContactOrder, setCurrentContactOrder] = useState(sortContacts(contacts))
+  // const {data, isLoading} = useQuery("data", getOtherUsers)
+  console.log("DATA :", sortContacts(data)[0])
+  const [currentUser, setCurrentUser] = useState(sortContacts(data)[0])
+  const [currentContactOrder, setCurrentContactOrder] = useState(sortContacts(data))
   return (
     <>
-      <QueryClientProvider client={queryClient}>
       <UpdateContext.Provider value={{activeTab, setActiveTab, currentUser, setCurrentUser, currentContactOrder, setCurrentContactOrder}}>
       <ToastContainer closeButton={<Close />} position="top-center" />
       <BrowserRouter>
@@ -58,11 +61,11 @@ function App() {
             <Route path="/" element={<DashboardAdmin/>} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/prescription" element={<Prescription />} />
             <Route path='/detail-infrastructure' element={<DetailInfrastructure />} />
         </Routes>
       </BrowserRouter>
       </UpdateContext.Provider>
-      </QueryClientProvider>
     </>
   )
 }

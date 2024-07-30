@@ -19,13 +19,16 @@ function Hospital(props) {
       .catch(error => console.log(error))
   }
   useEffect(() => {
+    setSelectedHospital()
+    setSelectedDoctor()
+    setDetails()
     getHospitals()
   })
 
   const [selectedHospital, setSelectedHospital] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [date, setDate] = useState(new Date())
-  const [details, setDetails] = useState()
+  const [details, setDetails] = useState("")
 
   const handleFilterDoctors = (value) => {
       const fhospital = [...hospitals].find(hosp => hosp.name === value);

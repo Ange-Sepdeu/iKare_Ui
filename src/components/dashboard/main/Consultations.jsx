@@ -7,6 +7,7 @@ import { toast } from 'react-toastify'
 import Jitsi from "react-jitsi";
 import { JitsiMeeting } from '@jitsi/react-sdk'
 import { blue } from '@mui/material/colors'
+import { Spinner } from 'reactstrap'
 
 
 function Consultations() {
@@ -18,6 +19,7 @@ function Consultations() {
     const [activeUserDoneConsultations, setActiveUserDoneConsultations] = useState([])
    const [upComingConsultation, setUpComingConsultation] = useState(null)
    const getPatient = () => {
+      setLoading(true)
       const url = "/api/user/get-singleuser";
       axiosInstance.post(url, {id: activeUser._id})
       .then(response => {
@@ -30,13 +32,16 @@ function Consultations() {
           // const consultation = [...appointments].sort(())
       })
       .catch(error => console.log(error.message))
+      .finally(() => setLoading(false))
    }
    const compareFunction = (dateStringA, dateStringB) => {
       const milliA = new Date(dateStringA).getTime();
       const milliB = new Date(dateStringB).getTime();
       return milliA-milliB;
    }
+   const [loading, setLoading] = useState(false)
    const getDoctor = () => {
+    setLoading(true)
     const url = "/api/user/get-singleuser";
     axiosInstance.post(url, {id: activeUser._id, hospitalName: JSON.parse(localStorage.getItem("hospital")).name})
     .then(response => {
@@ -51,6 +56,7 @@ function Consultations() {
         setActiveUserDoneConsultations(doneConsultation);
     })
     .catch(error => console.log(error))
+    .finally(() => setLoading(false))
    }
 
    const endCall = () => {
@@ -109,6 +115,12 @@ function Consultations() {
     (<div className='bg-white p-8 border-box h-[90%]'>
            <div className='mb-[4%]'>
               <h2 className='text-[28px] font-semibold'>UpComing Video Consultation</h2>
+               {
+                //  loading ?
+                //  <div className='px-4'>
+                //       <Spinner size={28} />
+                //   </div>
+                //   :
                 <div>
                     <h2 className='font-bold'>Call Details</h2>
                     {
@@ -118,7 +130,7 @@ function Consultations() {
                       <div>Patient: {upComingConsultation?.user}</div>
                       }
                     <div>{upComingConsultation?.details}</div>
-                </div>
+                </div>}
                   {
                     new Date(upComingConsultation?.date) <= new Date() ?
                   (

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react'
 import Maps from "../../Map/Maps";
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useQuery } from 'react-query';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tooltip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { Spinner } from 'reactstrap';
 
 function Pharmacies() {
   const [currentLocation, setCurrentLocation] = useState();
@@ -31,7 +32,9 @@ function Pharmacies() {
     .catch(error => console.log(error))
     })
   }
-  const {isLoading, data} = useQuery("data", getGeoLocation)
+  // const queryClient = useQueryClient()
+  // queryClient.invalidateQueries({queryKey: ["geolocation"]})
+  const {isLoading, data} = useQuery({queryKey: ["geolocation"], queryFn:getGeoLocation})
 
   return (
     <div className='bg-white h-[100vh] overflow-y-auto'>
@@ -39,7 +42,9 @@ function Pharmacies() {
       <div className='w-full p-4'>
           {
             isLoading ?
-             <div className='text-[18px] font-semibold text-center mt-7'>Loading ... </div>
+             <div className='text-teal-800 text-center mt-7'>
+               <Spinner size={28} />
+             </div>
             :
             [...hospitals].map((hospital) => (
               <Tooltip key={hospital?.properties?.place_id} title="View on map">
@@ -57,7 +62,9 @@ function Pharmacies() {
       <div className=''>
       {
             isLoading ?
-             <div className='text-[18px] font-semibold text-center mt-7'>Loading ... </div>
+            <div className='text-teal-800 text-center mt-7'>
+            <Spinner size={28} />
+          </div>
             :
             [...pharmacy].map((hospital) => (
               <Tooltip key={hospital?.properties?.place_id} title="View on map">

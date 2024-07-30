@@ -10,6 +10,7 @@ import axiosInstance from '../../../utils/axiosInstance/axiosInstance'
 import { io } from 'socket.io-client'
 import { toast } from 'react-toastify'
 import "react-toastify/dist/ReactToastify.css"
+import { Spinner } from 'reactstrap'
 
 function ChatContainer({contact}) {
   const [userConversation, setUserConversation] = useState([])
@@ -61,15 +62,18 @@ function ChatContainer({contact}) {
       }
       setChatMessage("")
   }
+  const [isLoading, setIsLoading] = useState(false)
   const [activeUserNotifs, setActiveUserNotifs] = useState([])
   const getActiveUser = () => {
     const url = "/api/user/get-singleuser";
+    setIsLoading(true)
       axiosInstance.post(url, {id: activeUser?._id, hospitalName:JSON.parse(localStorage.getItem("hospital"))?.name})
       .then(response => {
         const notifications = response.data?.data.notifications
         setActiveUserNotifs(notifications)
       })
       .catch(error => console.log(error))
+      .finally(() => setIsLoading(false))
   }
   
   const getCurrentConversation = () => {
@@ -92,24 +96,36 @@ function ChatContainer({contact}) {
           }])
       })
   }
-
    useEffect(() => {
       setUserConversation(currentUser)
       getActiveUser()
       getCurrentConversation()
       getSocketMessages()
-   }, [currentUser])
+   }, [currentUser?._id])
    useEffect(() => {
     scrollToBottom()
    })
   return (
     <div className='main-right'>
-      <Header 
+      {
+        (!currentUser && !userConversation) ?
+        <div className='p-8 text-center flex justify-center items-center h-full text-[24px] font-semibold text-white'>
+            Welcome to the Chat section of iKare, you can select a discussion to start chatting or click on the plus icon to select a contact
+        </div>
+        :
+        <>
+        <Header 
       image={userConversation?.image} 
       name={userConversation?.fullname} 
       lastSeen="" 
       />
-        <div className="message-container">
+        {
+          isLoading ?
+          <div className='mt-7 text-center text-white'>
+            <Spinner size={28} />
+          </div>
+          :
+          <div className="message-container">
         <div className="date">Today</div>
           {
             [...currentConversation]?.map((conversation) => {
@@ -124,7 +140,7 @@ function ChatContainer({contact}) {
             })
           }
           <div ref={bottom}></div>
-        </div>
+        </div>}
       <div className="send-message-container bg-opacity-20">
             <SentimentSatisfied className='icons'/>
             <MessageInput 
@@ -137,6 +153,8 @@ function ChatContainer({contact}) {
             />
             <Send className='icons' onClick={() => sendMessage()} />
       </div>
+      </>
+      }
     </div>
   )
 }

@@ -6,6 +6,7 @@ import HospitalCreationModal from '../modals/HospitalCreationModal'
 import axiosInstance from "../../../utils/axiosInstance/axiosInstance"
 import "react-toastify/dist/ReactToastify.css"
 import { toast } from 'react-toastify';
+import { Spinner } from 'reactstrap'
 
 function Appointments() {
    const [isHospitalModalOpened, setIsHospitalModalOpened] = useState(false)
@@ -16,21 +17,26 @@ function Appointments() {
    const [doctorAppointments, setDoctorAppointments] = useState([])
    const userRole = localStorage.getItem("role");
    const activeUser = JSON.parse(localStorage.getItem("user"))
+   const [loading, setLoading] = useState(false)
    const getPatient = () => {
       const url = "/api/user/get-singleuser";
+      setLoading(true)
       axiosInstance.post(url, {id: activeUser._id})
       .then(response => {
           setPatientAppointments(response.data.data.appointments)
       })
       .catch(error => console.log(error.message))
+      .finally(() => setLoading(false))
    }
    const getDoctor = () => {
     const url = "/api/user/get-singleuser";
+    setLoading(true)
     axiosInstance.post(url, {id: activeUser._id, hospitalName: JSON.parse(localStorage.getItem("hospital")).name})
     .then(response => {
         setDoctorAppointments(response.data.data.appointments)
     })
     .catch(error => console.log(error.message))
+    .finally(() => setLoading(false))
    }
 
    const handleRespondToAppointment = (response, email, appointment) => {
@@ -78,6 +84,11 @@ function Appointments() {
             </TableHead>
             <TableBody>
                {
+                // loading ?
+                // <div className='text-center w-full text-blue-800 mt-2'>
+                //   Please wait <Spinner size={28} />
+                // </div>
+                // :
                 [...patientAppointments].length === 0 ?
                 <TableRow>
                   <TableCell className='text-center p-4 text-[22px]' colSpan={6}>No record to display</TableCell>
@@ -142,6 +153,11 @@ function Appointments() {
              </TableHead>
              <TableBody>
                 {
+                  // loading ?
+                  // <div className='text-center text-blue-800 w-full mt-2'>
+                  //   Please wait <Spinner size={28} />
+                  // </div>
+                  // :
                   [...doctorAppointments].length === 0 ?
                   <TableRow>
                   <TableCell className='text-center p-4 text-[22px]' colSpan={6}>No record to display</TableCell>
@@ -152,7 +168,7 @@ function Appointments() {
                 <TableRow key={data._id}>
                 <TableCell>{data._id}</TableCell>
                 <TableCell>{data.details}</TableCell>
-                <TableCell>{data.date}</TableCell>
+                <TableCell>{new Date(data.date).toLocaleString()}</TableCell>
                 <TableCell>{data.user}</TableCell>
                 <TableCell style={data.status === "ACCEPTED" ? {color: "green", fontWeight: 700} : data.status==="PENDING" ?{color: "orange", fontWeight: 700}:{color: "red", fontWeight: 700}}>{data.status}</TableCell>
                 <TableCell>

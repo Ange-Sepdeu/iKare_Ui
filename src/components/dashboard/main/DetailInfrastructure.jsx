@@ -2,9 +2,10 @@ import { ChevronLeftRounded } from '@mui/icons-material'
 import { IconButton } from '@mui/material'
 import axios from 'axios'
 import React, { useState } from 'react'
-import { useQuery } from 'react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { Spinner } from 'reactstrap'
 
 export default function DetailInfrastructure() {
     const [calculatedDistance, setCalculatedDistance] = useState()
@@ -25,7 +26,7 @@ export default function DetailInfrastructure() {
             toast.error(error.message)
         }
     }
-    const {data, isLoading} = useQuery("data", getLocationDetails)
+    const {data, isLoading} = useQuery({queryKey: ["geolocation-details"], queryFn:getLocationDetails})
   return (
     <>
         <IconButton onClick={() => navigate("/")}>
@@ -42,7 +43,9 @@ export default function DetailInfrastructure() {
         <div className='w-[65%]'>
         {
                 isLoading ?
-                <div>Loading ....</div>
+                <div className='text-teal-800 mt-5'>
+                    <Spinner size={32} />
+                </div>
                 :
                 <div className='h-full'>
                     <Link to={mapImage} target='_blank'>

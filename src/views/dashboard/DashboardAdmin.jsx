@@ -15,6 +15,7 @@ import Settings from "../../components/dashboard/main/Settings"
 import { UpdateContext } from '../../utils/context/UpdateContext';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import Ehr from '../../components/dashboard/main/Ehr';
 
 function DashboardAdmin() {
     const navigate = useNavigate()
@@ -56,6 +57,7 @@ function DashboardAdmin() {
                  {activeTab == 8 && <Emergency />}
                  {activeTab == 9 && <Chat />}
                  {activeTab == 10 && <Settings />}
+                 {activeTab == 11 && <Ehr />}
             </div>
         </div>
     </>
