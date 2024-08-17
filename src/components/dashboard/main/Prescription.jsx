@@ -58,7 +58,7 @@ export default function Prescription() {
                 <div className="w-full md:w-6/12 lg:w-6/12 h-full bg-teal-900 text-white rounded-[15px]">
                 <div className="h-[98%] p-4 m-auto rounded-[25px] overflow-auto">
                     <div className="text-[20px] mt-7 text-center font-bold">Patient's Information</div>
-                    <div className="text-center text-[13px]">Name: <span>{patient?.fullname}</span></div>
+                    <div className="text-center text-[13px]">Email: <span>{patient}</span></div>
                     <div className="text-center text-[13px]">Consultation id: <span>{appointment?.consultation?._id}</span></div>
                     <div className="m-auto text-[14px] text-center mt-5">
                         <form method="post" onSubmit={handleSubmit}>

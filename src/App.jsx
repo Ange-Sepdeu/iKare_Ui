@@ -29,14 +29,12 @@ function App() {
         const chattedContact = []
         contacts.forEach(contact => {
         let notifs = contact?.notifications.filter(notifs => (notifs.sender === activeUser?._id || notifs.receiver === activeUser?._id))
-        console.log(notifs)
         if (notifs?.length > 0)
         {
           const lastNotif = notifs[notifs.length-1]
           chattedContact.push({...contact, lastNotif})
         }
   })
-  console.log("Chatted Contact :", chattedContact)
   setContacts(contacts)
   setData(chattedContact)
   // return chattedContact
@@ -48,8 +46,6 @@ function App() {
  useEffect(() => {
       getOtherUsers()  
  })
-  // const {data, isLoading} = useQuery("data", getOtherUsers)
-  console.log("DATA :", sortContacts(data)[0])
   const [currentUser, setCurrentUser] = useState(sortContacts(data)[0])
   const [currentContactOrder, setCurrentContactOrder] = useState(sortContacts(data))
   return (

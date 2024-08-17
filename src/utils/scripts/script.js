@@ -31,11 +31,9 @@ export const extractHour = (date) =>
 export const sortContacts = (contactArray) => {
     contactArray?.sort((a, b) => 
     {
-    const length1 = extractHour(a?.lastNotif?.date)
-    const length2 = extractHour(b?.lastNotif?.date)
-    if( length1 < length2) 
+    if( new Date(a?.lastNotif?.date) < new Date(b?.lastNotif?.date)) 
     return 1
-    else if(length1 > length2) 
+    else if(new Date(a?.lastNotif?.date) > new Date(b?.lastNotif?.date)) 
     return -1 
     else return 0
     }

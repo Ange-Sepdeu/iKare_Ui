@@ -1,6 +1,7 @@
 .main-right {
     width: 72%;
-    background-color: rgb(83, 152, 212);
+    background-color: rgb(83, 152, 212, 0.5);
+    height: 88%;
 }
 
 .send-message-container {
@@ -8,8 +9,8 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    background-color: white;
-    width: 55%;
+    background-color: #152238;
+    width: 57%;
     padding: 7px;
     border-radius: 7px;
     position: absolute;
@@ -32,7 +33,8 @@
 }
 
 .icons {
-    color: rgb(88, 87, 87);
+    color: white;
+    cursor: pointer;
 }
 
 .date {
@@ -47,7 +49,7 @@
 }
 
 .message-container {
-    height: 75vh;
+    height: 65vh;
     overflow-y: auto;
     width: 95%;
     margin: 0 auto;

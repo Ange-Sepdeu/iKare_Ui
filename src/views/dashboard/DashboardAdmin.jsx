@@ -14,7 +14,6 @@ import Chat from "../../components/dashboard/main/Chat"
 import Settings from "../../components/dashboard/main/Settings"
 import { UpdateContext } from '../../utils/context/UpdateContext';
 import { useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
 import Ehr from '../../components/dashboard/main/Ehr';
 
 function DashboardAdmin() {
@@ -23,19 +22,11 @@ function DashboardAdmin() {
     const activeUser = JSON.parse(localStorage.getItem("user"))
     const userRole = localStorage.getItem("role")
     const hospital  = JSON.parse(localStorage.getItem("hospital"))
-    const socket = io('http://localhost:5000')
     const token = localStorage.getItem("token")
     useEffect(() => {
       if (token == null)
         navigate("/login")
     })
-    useEffect(() => {
-      if (userRole === "PATIENT")
-        socket.emit("send-id", {...activeUser, userRole})
-        else
-        socket.emit("send-id", {...activeUser, userRole, hospital_id:hospital?._id})
-      return () => socket
-    }, [token])
   return (
     <>
         <div className='flex bg-[#F3F1F1] flex-row justify-between w-full p-2'>

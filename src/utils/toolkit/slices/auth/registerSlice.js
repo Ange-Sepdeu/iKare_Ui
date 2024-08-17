@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axiosInstance from "../../axiosInstance/axiosInstance"
+import axiosInstance from "../../../axiosInstance/axiosInstance"
 
 const registerUser = {
     fullName: "",

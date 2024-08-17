@@ -1,6 +1,7 @@
 import React, {useContext} from 'react'
 import "../../../../css/singlecontact.css"
 import { Avatar, Badge } from '@mui/material'
+import {Image} from "@mui/icons-material"
 
 function SingleContact({src, onClickHandler, 
   contactHeader, contactLastMessage, chatTime, unReadMessages}) {
@@ -21,13 +22,13 @@ function SingleContact({src, onClickHandler,
                 <div className='flex justify-between items-center'>
                     <div className='text-[14px] font-bold'>{contactHeader}</div>
                     <div className='text-[9px] font-bold text-teal-800'>{
-                    new Date().toISOString() != new Date(chatTime).toISOString() ? 
+                    new Date().getDate() != new Date(chatTime).getDate() ? 
                     new Date(chatTime).toLocaleDateString() :
-                    new Date(chatTime).getHours() + ":"+ new Date(chatTime).getMinutes()
+                    <span>{new Date(chatTime).getHours()<10 && "0"}{new Date(chatTime).getHours()} : {new Date(chatTime).getMinutes()<10 && "0"}{new Date(chatTime).getMinutes()}</span>
                   }</div>
                 </div>
                 <div className='flex justify-between items-center'>
-                    <div className='text-[10px] font-semibold w-[75%] overflow-x-hidden'>{contactLastMessage}</div>
+                    <div className='text-[10px] font-semibold w-[75%] overflow-x-hidden'>{contactLastMessage === "" ? <Image/> : contactLastMessage}</div>
                     <div className='w-[5%]'>
                       <Badge badgeContent={unReadMessages} color="success"  />
                     </div>

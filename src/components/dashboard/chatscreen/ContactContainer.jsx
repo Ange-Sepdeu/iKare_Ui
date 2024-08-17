@@ -9,41 +9,44 @@ import { IconButton, Dialog, Avatar, breadcrumbsClasses } from '@mui/material';
 import { Add, Close } from '@mui/icons-material';
 import {useQuery, useQueryClient} from "@tanstack/react-query"
 import { Spinner } from 'reactstrap';
+import {useSelector, useDispatch} from "react-redux";
+import {setCurrentUser, setCurrentConversation} from "../../../utils/toolkit/slices/app/appSlice";
 
 function ContactContainer({setCurrentContact}) {
-    const {setCurrentUser, currentContactOrder, currentUser} = useContext(UpdateContext)
+    const dispatch = useDispatch()
     const [contacts, setContacts] = useState([]);
     const [chattedContact, setChattedContact] = useState([])
-
    const userRole = localStorage.getItem("role");
    const activeUser = JSON.parse(localStorage.getItem("user"));
    const getOtherUsers = async() => {
-      const url = "/api/user/get-users";
       try {
+          const url = "/api/user/get-users";
           const response = await axiosInstance.get(url)
           const dbUsers = response.data.data;
           const contacts = [...dbUsers].filter(dbUser => dbUser?._id != activeUser?._id)
           const chattedContact = []
         contacts.forEach(contact => {
-          let notifs = contact?.notifications.filter(notifs => (notifs.sender === activeUser?._id || notifs.receiver === activeUser?._id))
-          let unRead = notifs?.filter(not => (not.status == "PENDING" && not?.receiver==activeUser?._id))
+          let notifs = contact?.notifications.filter(notifs => (notifs.sender == activeUser?._id || notifs.receiver == activeUser?._id))
+          // let unRead = notifs?.filter(not => (not.status == "PENDING" && not?.sender==currentUser?._id))
+          let unRead = notifs.filter(not => (not.status == "PENDING" && not.sender==contact?._id))
+          // console.log("UNREAD ", unRead)
           if (notifs?.length > 0)
           {
             const lastNotif = notifs[notifs.length-1]
             chattedContact.push({...contact, lastNotif, unReadMessages:unRead?.length})
           }
     })
-    console.log("Chatted Contact :", chattedContact)
     setContacts(contacts)
-    return chattedContact
+    const sorted = sortContacts(chattedContact)
+    return sorted
       }
       catch(error) {
         console.log(error)
       }
    }
    const queryClient = useQueryClient()
-   queryClient.invalidateQueries({queryKey: ["contact"]})
-   const {data, isLoading, isError, error} = useQuery({queryKey: ["contact"], queryFn: getOtherUsers, networkMode: "always"})
+  //  queryClient.invalidateQueries({queryKey: ["contact"]})
+   const {data, isLoading, isError, error} = useQuery({queryKey: ["contact"], queryFn: getOtherUsers, networkMode: "always", enabled:true})
    const [openDialog, setOpenDialog] = useState(false);
    const toggleContactDialog = () => {
       setOpenDialog(!openDialog)
@@ -58,8 +61,10 @@ function ContactContainer({setCurrentContact}) {
     }
   }
   useEffect(() => {
-      setContacts(currentContactOrder)
-    }, [currentContactOrder])
+      setInterval(() => {
+        queryClient.invalidateQueries({queryKey: ["contact"]})
+      }, 500);
+    }, [])
 
   return (
     <>
@@ -78,7 +83,11 @@ function ContactContainer({setCurrentContact}) {
             </div>
             :
             [...contacts].map(contact => (
-                <div onClick={() => {setCurrentUser(contact); setCurrentContact(contact); toggleContactDialog()}} className='p-2 mt-1 bg-gray-50 hover:text-white hover:bg-gray-100 border-b-2 border-b-teal-900 cursor-pointer flex justify-left items-center gap-4'>
+                <div key={contact._id} 
+                onClick={() => {
+                  dispatch(setCurrentUser({currentUser:contact})); 
+                  dispatch(setCurrentConversation())
+                  toggleContactDialog()}} className='p-2 mt-1 bg-gray-50 hover:text-white hover:bg-gray-100 border-b-2 border-b-teal-900 cursor-pointer flex justify-left items-center gap-4'>
                   <div>
                   {
                     contact?.image ? <img src={contact?.image} alt="Contact Image" />
@@ -112,8 +121,8 @@ function ContactContainer({setCurrentContact}) {
                     >
                     <SingleContact 
                     onClickHandler={() => {
-                      setCurrentUser(contact),
-                      (event) => setCurrentContact(contact)
+                        dispatch(setCurrentUser({currentUser:contact}));
+                        dispatch(setCurrentConversation())
                     }
                     }
                     src={contact?.image}
