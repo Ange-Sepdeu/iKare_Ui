@@ -4,6 +4,7 @@ import * as Yup from "yup"
 import axiosInstance from '../../../utils/axiosInstance/axiosInstance'
 import "react-toastify/dist/ReactToastify.css"
 import { toast } from 'react-toastify';
+import { Spinner } from 'reactstrap'
 
 function Hospital(props) {
   const [hospitals, setHospitals] = useState([])
@@ -24,12 +25,12 @@ function Hospital(props) {
 
   const [selectedHospital, setSelectedHospital] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [loading, setLoading] = useState(false)
   const [date, setDate] = useState(new Date())
-  const [details, setDetails] = useState()
+  const [details, setDetails] = useState("")
 
   const handleFilterDoctors = (value) => {
       const fhospital = [...hospitals].find(hosp => hosp.name === value);
-      console.log("F hospital : ", hospitals, selectedHospital)
       setDoctors(fhospital?.doctors)
       setSelectedDoctor(fhospital?.doctors[0].fullname)
   }
@@ -41,11 +42,13 @@ function Hospital(props) {
 
   const handleBookAppointment = (e) => {
     e.preventDefault()
+    setLoading(true)
     const url = "/api/user/book-appointment";
     const doctor = [...doctors].find(doc => doc.fullname === selectedDoctor)
     axiosInstance.post(url, {doctor, hospital:selectedHospital, patient:JSON.parse(localStorage.getItem("user")), details, date})
     .then(response => toast.success(response.data.message))
     .catch(error => toast.error(error.response.data.message ?? error.message))
+    .finally(() => setLoading(false))
   }
   return (
 <div>
@@ -67,7 +70,10 @@ function Hospital(props) {
                   doctors?.length === 0 ?
                   <div>No Doctor</div>
                   :
-                  <select value={selectedDoctor} className='p-3 mb-3 border w-full' onChange={e => setSelectedDoctor(e.target.value)}>
+                  <select 
+                  value={selectedDoctor} className='p-3 mb-3 border w-full' 
+                  onChange={e => setSelectedDoctor(e.target.value)}>
+                      <option value="" disabled defaultChecked>Select a doctor</option>
                       {
                        doctors?.map(doctor => (
                           <option key={doctor._id}>{doctor.fullname}</option>
@@ -89,7 +95,15 @@ function Hospital(props) {
                 required
                 onChange={(e) => setDetails(e.target.value)}
                 />
-                {doctors.length>0 && hospitals.length>0 && <button type="submit" className='mt-7 rounded-[10px] w-[50%] m-auto p-3 text-white bg-green-700'>Book</button>}
+                {doctors.length>0 && hospitals.length>0 && 
+                (
+                      loading ?
+                    <div className='text-center w-full text-blue-800 mt-2'>
+                      Please wait <Spinner size={28} />
+                    </div>
+                    :
+                  <button type="submit" className='mt-7 rounded-[10px] w-[50%] m-auto p-3 text-white bg-green-700'>Book</button>)
+                }
                 </form>
                 </div>
              </div>

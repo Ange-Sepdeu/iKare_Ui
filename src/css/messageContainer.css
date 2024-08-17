@@ -1,6 +1,7 @@
 .left-message-container {
-    background-color: white;
-    align-self: self-start;
+    background-color: #152238;
+    align-self: flex-start;
+    color: white;
 }
 
 .left-message-container, .right-message-container {
@@ -10,12 +11,14 @@
     margin-top: 5vh;
     padding: 7px;
     border-radius: 10px;
+    font-weight: 600;
     width: max-content;
 }
 
 .right-message-container {
-    background-color: rgb(98, 242, 8);
-    align-self: self-end;
+    background-color: #0C3B41;
+    align-self: flex-end;
+    color: white;
 }
 
 .container {
@@ -41,7 +44,6 @@
     flex-direction: row;
     align-items: center;
     margin-top: 1.5vh;
-}
-.right-message-container span {
-    color: white;
+    font-size: 11px;
+    color: lightgray;
 }

@@ -5,19 +5,21 @@ import "../../../css/chatscreen.css"
 
 function Chat() {
   const [contact, setContact] = useState(null)
+  const [contactOrder, setContactOrder] = useState()
   const setCurrentContact = (obj) => {
       setContact(obj)
+      console.log("CURRENT CONTACT: ", obj)
   }
-
-  useEffect(() => {
-    console.log("OBJ", contact)
-  }, [contact])
+  const setOrder = (obj) => {
+    setContactOrder(obj)
+  }
   return (
     <>
       <div className='main-container'>
-        <ContactContainer 
+        <ContactContainer
+        contactOrder={contactOrder} 
         setCurrentContact={setCurrentContact}/>
-         <ChatContainer contact={contact} />
+         <ChatContainer setOrder={setOrder} contact={contact} />
       </div>
     </>
   )

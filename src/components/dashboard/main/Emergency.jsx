@@ -1,84 +1,137 @@
-import { Block, CheckCircle, CheckCircleOutline, CheckOutlined, Delete, DisabledByDefault, VisibilityOutlined } from '@mui/icons-material'
-import { TableHead, Table, TableCell, TableBody, TableRow, TableContainer, TablePagination, Paper, Tooltip, IconButton, Button, TableSortLabel } from '@mui/material'
-import React, {useState} from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import "../../../css/chatcontainer.css"
+import Header from '../chatscreen/Header'
+import MessageInput from "../inputs/MessageInput"
+import {HeartBroken, Send, SentimentSatisfied } from '@mui/icons-material'
+import MessageContainer from '../chatscreen/MessageContainer'
+import { correctTime, sortContacts, unShiftContacts } from '../../../utils/scripts/script'
+import { UpdateContext } from '../../../utils/context/UpdateContext'
+import axiosInstance from '../../../utils/axiosInstance/axiosInstance'
+import { io } from 'socket.io-client'
+import { toast } from 'react-toastify'
+import "react-toastify/dist/ReactToastify.css"
 
 function Emergency() {
-  const [mockData, setMockData] = useState([
-    {
-      id: "12345",
-      name: "Ange Sepdeu",
-      institute: "2022/03/25",
-      status: "PENDING"
-    },
-    {
-      id: "12341",
-      name: "Ange Sepdeu",
-      institute: "2021/04/27",
-      status: "ACCEPTED"
-    },
-    {
-      id: "12344",
-      name: "Ange Sepdeu",
-      institute: "2020/11/30",
-      status: "BLOCKED"
-    },
-   ])
+  const [userConversation, setUserConversation] = useState([])
+  const [currentConversation, setCurrentConversation] = useState([])
+  const {currentUser, currentContactOrder, setCurrentContactOrder} = useContext(UpdateContext)
+  const [chatMessage, setChatMessage] = useState("")
+  const activeUser = JSON.parse(localStorage.getItem("user"))
+  const bottom = useRef(null)
+  const socket = io('http://localhost:5000')
+  const scrollToBottom = () => {
+    bottom?.current?.scrollIntoView({behavior: "smooth"})
+  }
+  const sendChatMessage = (e) => {
+    if(e.key === "Enter")
+    sendMessage()
+  }
+  const sendMessage = () => {
+      const date = new Date()
+      if(chatMessage != "") {
+      try {
+        socket.emit("send-message", {
+          sender: activeUser?._id,
+          receiver: currentUser?._id,
+          time: date,
+          message: chatMessage
+        })
+      }
+      catch(error) {
+        toast.error(error)
+      }
+      setCurrentConversation([...currentConversation, {
+          sender: activeUser?._id,
+          receiver: currentUser._id,
+          date: date.getHours()+":"+date.getMinutes(),
+          message: chatMessage 
+      }])
+       currentContactOrder.forEach(contactOrder => {
+        if(contactOrder._id == currentUser._id)
+        {
+          contactOrder.conversation.push({
+            sender: activeUser?._id,
+            receiver: currentUser._id,
+            time: date,
+            message: chatMessage
+           }) 
+          setCurrentContactOrder(unShiftContacts(currentContactOrder, currentUser._id))
+        }
+       })
+      }
+      setChatMessage("")
+  }
+  const [activeUserNotifs, setActiveUserNotifs] = useState([])
+  const getActiveUser = () => {
+    const url = "/api/user/get-singleuser";
+      axiosInstance.post(url, {id: activeUser?._id, hospitalName:JSON.parse(localStorage.getItem("hospital"))?.name})
+      .then(response => {
+        const notifications = response.data?.data.notifications
+        setActiveUserNotifs(notifications)
+      })
+      .catch(error => console.log(error))
+  }
+  
+  const getCurrentConversation = () => {
+    var currentConversation  = [];
+    [...activeUserNotifs].forEach(userNotif => {
+        if (userNotif?.sender == currentUser?._id || userNotif?.receiver==currentUser?._id)
+          currentConversation.push(userNotif)
+    })
+    setCurrentConversation(currentConversation)
+  }
+
+  const getSocketMessages = () => {
+      socket.on("private-message", data => {
+        if (data?.sender == currentUser?._id)
+          setCurrentConversation((state) => [...state, {
+            sender: currentUser?._id,
+            receiver: activeUser?._id,
+            date: data?.time,
+            message: data?.message
+          }])
+      })
+  }
+   useEffect(() => {
+      setUserConversation(currentUser)
+      getActiveUser()
+      getCurrentConversation()
+      getSocketMessages()
+   }, [currentUser?._id])
+   useEffect(() => {
+    scrollToBottom()
+   })
   return (
-    <div className='text-right bg-white p-8 border-box text-5xl h-[90%]'>
-      
-        <TableContainer component={Paper}>
-         <Table>
-            <TableHead>
-              <TableRow className='bg-blue-900'>
-              <TableCell style={{color: "white", fontWeight: 700}}>ID </TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Patient</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Date</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Type</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Action</TableCell>
-            </TableRow>
-            </TableHead>
-            <TableBody>
-               {
-                 mockData?.map((data, index) => {
-                  return (
-               <TableRow>
-               <TableCell>{data.id}</TableCell>
-               <TableCell>{data.name}</TableCell>
-               <TableCell>{data.institute}</TableCell>
-               <TableCell style={data.status === "ACCEPTED" ? {color: "green", fontWeight: 700} : 
-                data.status === "PENDING" ?
-               {color: "orange", fontWeight: 700} :
-               {color: "red", fontWeight: 700}
-               }>{data.status}</TableCell>
-               <TableCell>
-                    <div className='flex flex-row justify-between w-[70%] items-center'>
-                    <div>
-                     <Tooltip arrow title="View record">
-                       <IconButton>
-                       <VisibilityOutlined className='text-blue-900' />
-                       </IconButton>
-                     </Tooltip>
-                     </div>
-                      <div>
-                     <Tooltip arrow title="Delete record">
-                       <IconButton>
-                       <Delete className='text-red-600' />
-                       </IconButton>
-                     </Tooltip>
-                     </div>
-                    </div>
-                   
-               </TableCell>
-               </TableRow>
-                  )
-                 })
-               }
-               
-            </TableBody>
-         </Table>
-            <TablePagination />
-         </TableContainer>
+    <div className='main-right w-full h-[90%]'>
+        <div className="message-container">
+        <div className="date">Today</div>
+          {
+            [...currentConversation]?.map((conversation) => {
+              return (
+                <>
+                    <MessageContainer 
+                    time={ new Date(conversation?.date).toLocaleDateString()+" "+new Date(conversation?.date).getHours()+":"+new Date(conversation?.date).getMinutes()}
+                    message={conversation?.message} 
+                    senderId={conversation?.sender} />
+                </>
+              )
+            })
+          }
+          <div ref={bottom}></div>
+        </div>
+      <div className="bot-message-container bg-opacity-20">
+            <SentimentSatisfied className='icons'/>
+            <MessageInput 
+             value={chatMessage}
+             onChangeHandler={(e) => setChatMessage(e.target.value)}
+             sendHandler={(e) => sendChatMessage(e)}
+            className="input-message bg-opacity-5" 
+            type="text" 
+            placeholder="Mesage"
+            />
+            <Send className='icons' onClick={() => sendMessage()} />
       </div>
+    </div>
   )
 }
 

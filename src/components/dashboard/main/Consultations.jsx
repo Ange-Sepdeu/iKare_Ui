@@ -1,5 +1,5 @@
 import { Block, CallReceivedOutlined, CheckCircle, CheckCircleOutline, CheckOutlined, Delete, DisabledByDefault, VisibilityOutlined } from '@mui/icons-material'
-import { TableHead, Table, TableCell, TableBody, TableRow, TableContainer, TablePagination, Paper, Tooltip, IconButton, Button } from '@mui/material'
+import { TableHead, Table, TableCell, TableBody, TableRow, TableContainer, TablePagination, Paper, Tooltip, IconButton } from '@mui/material'
 import React, {useState, useEffect} from 'react'
 import Creation from '../modals/Creation'
 import axiosInstance from '../../../utils/axiosInstance/axiosInstance'
@@ -7,36 +7,50 @@ import { toast } from 'react-toastify'
 import Jitsi from "react-jitsi";
 import { JitsiMeeting } from '@jitsi/react-sdk'
 import { blue } from '@mui/material/colors'
+import { Spinner } from 'reactstrap'
+import {useNavigate} from "react-router-dom";
+import addNotification from 'react-push-notification';
+import { useForm } from 'react-hook-form';
+import { Notifications } from 'react-push-notification';
+import  {Modal, ModalHeader, ModalFooter, ModalBody, Button} from "reactstrap";
 
 
 function Consultations() {
+  const {handleSubmit, register, formState: { errors }} = useForm();
   const activeUser = JSON.parse(localStorage.getItem("user"))
-  const roleLabel = localStorage.getItem("role")
+  const [roleLabel, setRoleLabel] = useState(localStorage.getItem("role"))
   const [timeLeft, setTimeLeft] = useState()
+  const navigate = useNavigate()
+  const [paymentModal, setPaymentModal] = useState(false);
   const [isHospitalModalOpened, setIsHospitalModalOpened] = useState(false)
     const [room, setRoom] = useState()
     const [activeUserDoneConsultations, setActiveUserDoneConsultations] = useState([])
    const [upComingConsultation, setUpComingConsultation] = useState(null)
    const getPatient = () => {
+      setLoading(true)
       const url = "/api/user/get-singleuser";
-      axiosInstance.post(url, {id: activeUser._id})
+      axiosInstance.post(url, {id: activeUser._id, role: roleLabel})
       .then(response => {
           const appointments = response.data.data.appointments;
-          const doneConsultation = [...appointments].filter(appt => appt.consultation.status === "DONE");
+          const doneConsultation = [...appointments].filter(appt => appt.consultation?.status === "DONE");
           setActiveUserDoneConsultations(doneConsultation)
-          const sortedAppointments = [...appointments].filter(appt => appt.status === "ACCEPTED").sort((a, b) => compareFunction(a, b))
+          const sortedAppointments = [...appointments].filter(appt => appt?.status === "ACCEPTED").sort((a, b) => compareFunction(a, b))
           setUpComingConsultation(sortedAppointments[0]);
           setTimeLeft(new Date(upComingConsultation?.date) - new Date())
+          var userTimezoneOffset = new Date(upComingConsultation?.date).getTimezoneOffset() * 60000;
           // const consultation = [...appointments].sort(())
       })
       .catch(error => console.log(error.message))
+      .finally(() => setLoading(false))
    }
    const compareFunction = (dateStringA, dateStringB) => {
       const milliA = new Date(dateStringA).getTime();
       const milliB = new Date(dateStringB).getTime();
       return milliA-milliB;
    }
+   const [loading, setLoading] = useState(false)
    const getDoctor = () => {
+    setLoading(true)
     const url = "/api/user/get-singleuser";
     axiosInstance.post(url, {id: activeUser._id, hospitalName: JSON.parse(localStorage.getItem("hospital")).name})
     .then(response => {
@@ -51,6 +65,7 @@ function Consultations() {
         setActiveUserDoneConsultations(doneConsultation);
     })
     .catch(error => console.log(error))
+    .finally(() => setLoading(false))
    }
 
    const endCall = () => {
@@ -58,6 +73,7 @@ function Consultations() {
       axiosInstance.post(url, {patient:upComingConsultation?.user, doctor:activeUser, appointment:upComingConsultation})
       .then(response => {
             toast.success(response.data.message)
+            navigate("/prescription", {state: {appointment:upComingConsultation, patient:upComingConsultation?.user}})
       }) 
       .catch(error => {
         toast.error(error.response.data.message ?? error.message)
@@ -84,32 +100,111 @@ function Consultations() {
    }
 
    useEffect(() => {
-      if (roleLabel === "PATIENT")
+      if (roleLabel == "PATIENT")
+      {
         getPatient()
+      }
       else
         getDoctor()
    })
+   const callNotification = () => {
+      if (new Date(timeLeft).getMinutes() <= 10 && new Date(timeLeft).getMinutes() > 0) {
+        addNotification({
+            title: "Important reminder",
+            native:true,
+            silent: false,
+            duration: 3000,
+            vibrate: 5,
+            subtitle: "Video Consultation",
+            message: "Your next video consultation in "+new Date(timeLeft).getMinutes()+" minutes",
+            theme: "darkblue",
+            closeButton: "X"    
+        })
+      }
+   }
+   const [paymentDetails, setPaymentDetails] = useState(null)
+   const makePayment = async(values) => {
+        try {
+          toast.info("Be ready to validate payment on your phone");
+          const url = "/api/user/make-payment";
+          const user = JSON.parse(localStorage.getItem("user"));
+          const doctor = upComingConsultation?.user
+          const response = await axiosInstance.post(url, {...values, ...user, details:"Consultation fee", amount: 100, doctor});
+          if (response.status == 200)
+          {
+            toast.success(response.data.message)
+            joinCall()
+          }
+          else 
+            toast.error(response.data.message)
+        }
+        catch(error) {
+           toast.error(error);
+        }
+   }
+   useEffect(() => {
+      setInterval(() => {
+        callNotification()
+      }, 60000);
+   })
   return (
     <>
+            <Modal backdrop="static" scrollable size="md" isOpen={paymentModal} toggle={() => setPaymentModal(!paymentModal)}>
+            <ModalHeader className="text-[24px] bg-teal-800 text-center text-white font-semibold">Make payments</ModalHeader>
+            <ModalBody>
+                <div className="w-full">
+                    <form method="POST" onSubmit={handleSubmit(makePayment)}>
+                    <label>Phone Number </label>
+                    <br />
+                    <input type='tel'
+                {...register("tel", {
+                  required: "* Required field",
+                  maxLength: {
+                    value: 9,
+                    message: "Phone number should be 9 characters"
+                  },
+                  minLength: {
+                    value: 9,
+                    message: "Phone number should be 9 characters"
+                  },
+                  pattern: {
+                    value: /^6{1}(5\d|(7\d|[89]\d))\d{3}\d{3}$/,
+                    message: "Enter either MTN or Orange"
+                  }
+                })} 
+                placeholder='Ex: 691254525' className='outline-none bg-gray-100 p-2 rounded-[7px] w-full' />
+                {errors.tel && <div className="text-red-600 mt-2"> {errors.tel.message} </div>}
+                  <div className="mt-5 flex justify-center gap-4 items-center">
+                  <Button type="submit" outline color="success">Initiate payment</Button>
+                  <Button outline color="danger" onClick={() => setPaymentModal(!paymentModal)}>Cancel</Button>
+                  </div>
+                    </form>
+                </div>
+            </ModalBody>
+        </Modal>
+    <Notifications position={"bottom-right"} />
     { onCall ?
      (
       <JitsiMeeting
         configOverwrite={{startWithAudioMuted:true}}
         roomName={room}
-        onReadyToClose={endCall}
+        onReadyToClose={roleLabel==="PATIENT" ? console.log("ENDED") : endCall}
         lang='en'
         getIFrameRef = { node => node.style.height = '75vh' }
         userInfo={{
-          displayName:activeUser?.fullname,
-          email: activeUser?.email
+          displayName:activeUser?.fullname
         }}
       />
      )
      :
     (<div className='bg-white p-8 border-box h-[90%]'>
-           <div className='mb-[4%]'>
-              <h2 className='text-[28px] font-semibold'>UpComing Video Consultation</h2>
-                <div>
+           <div className='mb-[4%] font-semibold'>
+              <h2 className='text-[28px] font-bold'>UpComing Video Consultation</h2>
+              {
+               upComingConsultation ?
+              (<>
+              {
+                <div className="font-semibold">
                     <h2 className='font-bold'>Call Details</h2>
                     {
                       roleLabel === "PATIENT" ?
@@ -118,18 +213,22 @@ function Consultations() {
                       <div>Patient: {upComingConsultation?.user}</div>
                       }
                     <div>{upComingConsultation?.details}</div>
-                </div>
+                </div>}
                   {
                     new Date(upComingConsultation?.date) <= new Date() ?
                   (
                     roleLabel === "PATIENT" ?
-                    <button onClick={joinCall} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-4 font-semibold bg-teal-800' type="submit">Join the Call</button>
+                    <button onClick={() => setPaymentModal(true)} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-2 font-semibold bg-teal-800' type="submit">Join the Call</button>
                     :
-                    <button onClick={launchCall} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-4 font-semibold bg-teal-800' type="submit">Launch a Call</button>
+                    <button onClick={launchCall} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-2 font-semibold bg-teal-800' type="submit">Launch a Call</button>
                   )
                   :
-                  (<div>Next Video Consultation in {new Date(timeLeft).getHours()} hours {new Date(timeLeft).getMinutes()}mins</div>)
+                  (<div>Next Video Consultation in <span className="font-bold text-teal-800">{ new Date(timeLeft).getHours() > 0  && <span>{new Date(timeLeft).getHours()} hours</span>} {new Date(timeLeft).getMinutes()}mins</span> </div>)
                   }
+              </>)
+              :
+               <div className="text-[20px] font-semibold text-red-600 mt-2">No scheduled video call </div>
+               } 
               </div>
               <h2 className='text-[28px] font-semibold'>Consultation History</h2>
           <TableContainer component={Paper}>

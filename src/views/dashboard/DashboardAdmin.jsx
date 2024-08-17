@@ -14,12 +14,17 @@ import Chat from "../../components/dashboard/main/Chat"
 import Settings from "../../components/dashboard/main/Settings"
 import { UpdateContext } from '../../utils/context/UpdateContext';
 import { useNavigate } from 'react-router-dom';
+import Ehr from '../../components/dashboard/main/Ehr';
 
 function DashboardAdmin() {
     const navigate = useNavigate()
     const {activeTab, setActiveTab} = useContext(UpdateContext)
+    const activeUser = JSON.parse(localStorage.getItem("user"))
+    const userRole = localStorage.getItem("role")
+    const hospital  = JSON.parse(localStorage.getItem("hospital"))
+    const token = localStorage.getItem("token")
     useEffect(() => {
-      if (localStorage.getItem("token") == null)
+      if (token == null)
         navigate("/login")
     })
   return (
@@ -43,6 +48,7 @@ function DashboardAdmin() {
                  {activeTab == 8 && <Emergency />}
                  {activeTab == 9 && <Chat />}
                  {activeTab == 10 && <Settings />}
+                 {activeTab == 11 && <Ehr />}
             </div>
         </div>
     </>
