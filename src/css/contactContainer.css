@@ -1,6 +1,7 @@
 .contact-container {
     width: 28%;
     height: 100%;
+    overflow-y: auto;
     background-color: white;
 }
 .below-contacts {
@@ -20,6 +21,7 @@
 
 ::-webkit-scrollbar {
     width: 10px;
+    display: none;
 }
 
 ::-webkit-scrollbar-track {

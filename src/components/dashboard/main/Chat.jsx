@@ -15,7 +15,7 @@ function Chat() {
   }
   return (
     <>
-      <div className='main-container'>
+      <div className='main-container mt-[8%]'>
         <ContactContainer
         contactOrder={contactOrder} 
         setCurrentContact={setCurrentContact}/>

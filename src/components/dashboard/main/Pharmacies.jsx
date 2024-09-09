@@ -37,8 +37,8 @@ function Pharmacies() {
   const {isLoading, data} = useQuery({queryKey: ["geolocation"], queryFn:getGeoLocation})
 
   return (
-    <div className='bg-white h-[100vh] overflow-y-auto'>
-    <div className='bg-white text-center text-3xl font-bold'>Nearby Hospitals</div>
+    <div className='bg-white mt-[8%] h-[100vh] overflow-y-auto'>
+    <div className='bg-white text-center mt-3 text-3xl font-bold'>Nearby Hospitals</div>
       <div className='w-full p-4'>
           {
             isLoading ?

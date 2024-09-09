@@ -32,7 +32,7 @@ function HospitalCreationModal({isOpen}) {
                }
               <Close onClick={() => setIsOpened(!isOpened)} />
              </div>
-               { activeIndex === 0 && <Hospital />}
+               { activeIndex === 0 && <Hospital isOpen={isOpened} />}
                { activeIndex === 1 && <AdminStep /> }
               </div> }
     </>

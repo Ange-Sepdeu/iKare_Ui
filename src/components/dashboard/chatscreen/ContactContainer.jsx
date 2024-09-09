@@ -90,8 +90,9 @@ function ContactContainer({setCurrentContact}) {
                   toggleContactDialog()}} className='p-2 mt-1 bg-gray-50 hover:text-white hover:bg-gray-100 border-b-2 border-b-teal-900 cursor-pointer flex justify-left items-center gap-4'>
                   <div>
                   {
-                    contact?.image ? <img src={contact?.image} alt="Contact Image" />
-                    : <Avatar sx={{color:"white", backgroundColor:"teal"}} />
+                    contact.image != null ? 
+                    <Avatar sx={{width:56, height:56}} src={axiosInstance.getUri() + contact?.image} />
+                    : <Avatar sx={{color:"white", backgroundColor:"teal", width:56, height:56}} />
                   }
                   </div>
                   <div className='text-[18px] font-semibold text-teal-900'>{ contact?.fullname}</div>
@@ -101,7 +102,8 @@ function ContactContainer({setCurrentContact}) {
         </div>
     </Dialog>
     <div className="contact-container">
-        <div className="below-contacts">
+          <div className='px-4 py-2 fixed bg-white w-[21.5%] text-[28px] font-semibold'>Chats</div>
+        <div className="below-contacts mt-[17%]">
         {
           isLoading  ?
           <div className='text-center mt-5 font-semiobld text-teal-800'>
@@ -112,7 +114,7 @@ function ContactContainer({setCurrentContact}) {
           //   <div>{error.message}</div>
           // :
             data?.length === 0 ?
-              <div className='px-4 py-2 twxt-center text-[18px] w-full font-semibold'>No message at the moment</div>
+              <div className='px-4 py-2 text-center text-[18px] w-full font-semibold'>No message at the moment</div>
             :
             data?.map((contact) => {
                 return(
@@ -125,7 +127,7 @@ function ContactContainer({setCurrentContact}) {
                         dispatch(setCurrentConversation())
                     }
                     }
-                    src={contact?.image}
+                    src={axiosInstance.getUri() + contact?.image}
                     contactHeader={contact?.fullname}
                     contactLastMessage={contact?.lastNotif?.message}
                     chatTime={contact?.lastNotif?.date}

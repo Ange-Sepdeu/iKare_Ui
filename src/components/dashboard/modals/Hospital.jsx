@@ -51,7 +51,7 @@ function Hospital(props) {
     .finally(() => setLoading(false))
   }
   return (
-<div>
+      <div>
                 <div className='text-left'>
                   <form onSubmit={handleBookAppointment} method="post">
                 <label htmlFor="hospitalName">Select a hospital</label>

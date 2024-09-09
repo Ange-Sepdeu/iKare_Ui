@@ -1,4 +1,3 @@
-import { Dropdown } from '@mui/base'
 import { Block, CheckCircle, CheckCircleOutline, CheckOutlined, Close, CloseRounded, Delete, DisabledByDefault, VisibilityOutlined } from '@mui/icons-material'
 import { TableHead, Table, TableCell, TableBody, TableRow, TableContainer, TablePagination, Paper, Tooltip, IconButton} from '@mui/material'
 import MuiButton from "@mui/material/Button";
@@ -8,6 +7,7 @@ import axiosInstance from "../../../utils/axiosInstance/axiosInstance"
 import "react-toastify/dist/ReactToastify.css"
 import { toast } from 'react-toastify';
 import { Spinner, Modal, ModalHeader, ModalBody, ModalFooter, Button} from 'reactstrap'
+import { teal } from '@mui/material/colors';
 
 function Appointments() {
    const [isHospitalModalOpened, setIsHospitalModalOpened] = useState(false)
@@ -25,7 +25,7 @@ function Appointments() {
    const getPatient = () => {
       const url = "/api/user/get-singleuser";
       setLoading(true)
-      axiosInstance.post(url, {id: activeUser._id})
+      axiosInstance.post(url, {id: activeUser._id, role: userRole})
       .then(response => {
           setPatientAppointments(response.data.data.appointments)
       })
@@ -68,7 +68,7 @@ function Appointments() {
    })
 
   return (
-  <>
+  <div className='mt-[8%]'>
         <Modal backdrop="static" scrollable size="md" isOpen={patientModal} toggle={() => setPatientModal(!patientModal)}>
             <ModalHeader className="text-[24px] bg-teal-800 text-center text-white font-semibold">Appointment Details</ModalHeader>
             <ModalBody>
@@ -101,17 +101,17 @@ function Appointments() {
        <div className='text-right bg-white p-8 border-box h-[90%]'>
         { userRole === "PATIENT" ? 
         (<>
-            <MuiButton variant="contained" color="primary" style={{marginBottom: "3vh", fontWeight: 700}} onClick={toggleHospitalModal}>Book appointment</MuiButton>
+            <MuiButton variant="contained" style={{marginBottom: "3vh", fontWeight: 700, backgroundColor: teal[900]}} onClick={toggleHospitalModal}>Book appointment</MuiButton>
         <TableContainer component={Paper}>
-         <Table>
+         <Table className='border'>
             <TableHead>
-              <TableRow className='bg-blue-900'>
-              <TableCell style={{color: "white", fontWeight: 700}}>ID</TableCell>
-              <TableCell style={{color: "white", fontWeight: 700}}>Appointment Details</TableCell>
-              <TableCell style={{color: "white", fontWeight: 700}}>Appointment Date</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Doctor</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Status</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Action</TableCell>
+              <TableRow>
+              <TableCell style={{fontWeight: 700}}>ID</TableCell>
+              <TableCell style={{fontWeight: 700}}>Appointment Details</TableCell>
+              <TableCell style={{fontWeight: 700}}>Appointment Date</TableCell>
+            <TableCell style={{fontWeight: 700}}>Doctor</TableCell>
+            <TableCell style={{fontWeight: 700}}>Status</TableCell>
+            <TableCell style={{fontWeight: 700}}>Action</TableCell>
             </TableRow>
             </TableHead>
             <TableBody>
@@ -161,15 +161,15 @@ function Appointments() {
         </>):
          <>
          <TableContainer component={Paper}>
-          <Table>
+          <Table className='border'>
              <TableHead>
-               <TableRow className='bg-blue-900'>
-               <TableCell style={{color: "white", fontWeight: 700}}>ID</TableCell>
-             <TableCell style={{color: "white", fontWeight: 700}}>Appointment Details</TableCell>
-             <TableCell style={{color: "white", fontWeight: 700}}>Appointment Date</TableCell>
-             <TableCell style={{color: "white", fontWeight: 700}}>Patient</TableCell>
-             <TableCell style={{color: "white", fontWeight: 700}}>Status</TableCell>
-             <TableCell style={{color: "white", fontWeight: 700}}>Action</TableCell>
+               <TableRow>
+               <TableCell style={{fontWeight: 700}}>ID</TableCell>
+             <TableCell style={{fontWeight: 700}}>Appointment Details</TableCell>
+             <TableCell style={{fontWeight: 700}}>Appointment Date</TableCell>
+             <TableCell style={{fontWeight: 700}}>Patient</TableCell>
+             <TableCell style={{fontWeight: 700}}>Status</TableCell>
+             <TableCell style={{fontWeight: 700}}>Action</TableCell>
              </TableRow>
              </TableHead>
              <TableBody>
@@ -236,7 +236,7 @@ function Appointments() {
          </>
          }
       </div>
-    </>
+    </div>
   )
 }
 

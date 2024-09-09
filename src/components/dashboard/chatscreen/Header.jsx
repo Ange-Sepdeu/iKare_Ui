@@ -7,13 +7,13 @@ import { Avatar } from '@mui/material'
 function Header({image, name, lastSeen}) {
   return (
     <>
-        <div className="header-main">
+        <div className="header-main fixed shadow-xl">
             <div className="header-left">
                 {
                   image ?
-                  <img src={image} alt="Current User"/>
+                  <Avatar sx={{width:50, height:50}} src={image} alt="Current User"/>
                   :
-                  <Avatar />
+                  <Avatar sx={{width:50, height:50}} />
                 }
                  <div className="top-header-left">
                     <div className='top-header-name'>{name}</div>

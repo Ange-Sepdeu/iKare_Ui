@@ -6,13 +6,14 @@ import axiosInstance from '../../../utils/axiosInstance/axiosInstance'
 import { toast } from 'react-toastify'
 import Jitsi from "react-jitsi";
 import { JitsiMeeting } from '@jitsi/react-sdk'
-import { blue } from '@mui/material/colors'
+import Emergency from "./Emergency";
 import { Spinner } from 'reactstrap'
 import {useNavigate} from "react-router-dom";
 import addNotification from 'react-push-notification';
 import { useForm } from 'react-hook-form';
 import { Notifications } from 'react-push-notification';
 import  {Modal, ModalHeader, ModalFooter, ModalBody, Button} from "reactstrap";
+import Prescription from './Prescription'
 
 
 function Consultations() {
@@ -70,6 +71,7 @@ function Consultations() {
 
    const endCall = () => {
       const url = "/api/user/end-consultation";
+      setOnCall(false);
       axiosInstance.post(url, {patient:upComingConsultation?.user, doctor:activeUser, appointment:upComingConsultation})
       .then(response => {
             toast.success(response.data.message)
@@ -85,7 +87,7 @@ function Consultations() {
       const roomId = "consultation"+new Date().getTime()
       setOnCall(true)
       setRoom(roomId)
-      axiosInstance.post(url,{patient:upComingConsultation?.user, doctor:activeUser, appointment:upComingConsultation, room:roomId})
+      axiosInstance.post(url,{patient:upComingConsultation?.user, doctor:activeUser, appointment:upComingConsultation, room:roomId, hospital:JSON.parse(localStorage.getItem("hospital"))})
       .then((response) => {
               toast.success(response.data.message)
       })
@@ -122,14 +124,14 @@ function Consultations() {
         })
       }
    }
-   const [paymentDetails, setPaymentDetails] = useState(null)
    const makePayment = async(values) => {
         try {
+          setPaymentProcessed(true)
           toast.info("Be ready to validate payment on your phone");
           const url = "/api/user/make-payment";
           const user = JSON.parse(localStorage.getItem("user"));
           const doctor = upComingConsultation?.user
-          const response = await axiosInstance.post(url, {...values, ...user, details:"Consultation fee", amount: 100, doctor});
+          const response = await axiosInstance.post(url, {tel_fee:values?.tel, ...user, details:"Consultation fee", amount: 100, doctor});
           if (response.status == 200)
           {
             toast.success(response.data.message)
@@ -141,12 +143,16 @@ function Consultations() {
         catch(error) {
            toast.error(error);
         }
+        finally {
+           setPaymentProcessed(false)
+        }
    }
-   useEffect(() => {
-      setInterval(() => {
-        callNotification()
-      }, 60000);
-   })
+   const [paymentProcessed, setPaymentProcessed] = useState(false)
+  //  useEffect(() => {
+  //     setInterval(() => {
+  //       callNotification()
+  //     }, 60000);
+  //  })
   return (
     <>
             <Modal backdrop="static" scrollable size="md" isOpen={paymentModal} toggle={() => setPaymentModal(!paymentModal)}>
@@ -185,19 +191,38 @@ function Consultations() {
     <Notifications position={"bottom-right"} />
     { onCall ?
      (
+      <div className='p-4 mt-[7%]'>
+      <div className={`flex justify-between ${localStorage.getItem("role") == "DOCTOR" ? "h-[35vh]" : "h-[75vh]"}  items-center gap-4`}>
       <JitsiMeeting
         configOverwrite={{startWithAudioMuted:true}}
         roomName={room}
-        onReadyToClose={roleLabel==="PATIENT" ? console.log("ENDED") : endCall}
+        spinner={Spinner}
+        onReadyToClose={endCall}
         lang='en'
-        getIFrameRef = { node => node.style.height = '75vh' }
+        getIFrameRef = { node => {node.style.width = "100%"; node.style.height="100%"} }
         userInfo={{
           displayName:activeUser?.fullname
         }}
       />
+      <div className='bg-white p-3 flex h-full flex-col justify-between gap-1 w-4/12 rounded-[20px] shadow-xl'>
+          <div className='font-semibold text-[18px] text-center'>Vital Statistics</div>
+          {localStorage.getItem("role") === "DOCTOR" && <div>Patient: {upComingConsultation?.consultation?.user}</div>}
+          <div>Temperature:  <span> Heart beat: </span></div>
+          <div>Blood pressure:  <span> Blood glucose: </span></div>
+      </div>
+      </div>
+      { localStorage.getItem("role") == "DOCTOR" && <div className='flex justify-between h-[72vh] items-center gap-3'>
+          <div className='w-6/12 h-full'>
+              <Emergency main_height='h-full' message_input_classname='flex justify-between items-center border-2 shadow-xl p-2 rounded-[15px]' />
+          </div>
+          <div className='w-6/12 h-full'>
+              <Prescription patient={upComingConsultation?.consultation?.user} appointment={upComingConsultation} />
+          </div>
+      </div>}
+      </div>
      )
      :
-    (<div className='bg-white p-8 border-box h-[90%]'>
+    (<div className='bg-white p-8 border-box h-[90%] mt-[7%]'>
            <div className='mb-[4%] font-semibold'>
               <h2 className='text-[28px] font-bold'>UpComing Video Consultation</h2>
               {
@@ -218,9 +243,28 @@ function Consultations() {
                     new Date(upComingConsultation?.date) <= new Date() ?
                   (
                     roleLabel === "PATIENT" ?
-                    <button onClick={() => setPaymentModal(true)} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-2 font-semibold bg-teal-800' type="submit">Join the Call</button>
+                    <>
+                     {                         
+                     upComingConsultation?.consultation?.room ?
+                    (
+                      <>
+                        {
+                          !paymentProcessed ? 
+                          <button onClick={() => setPaymentModal(true)} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-2 font-semibold bg-teal-800' type="submit">Join the Call</button>
+                        : <Spinner />
+                        }
+                      </>
+                    )
+                      :
+                     <div className='bg-red-800 text-white w-25 p-2'>Call has not yet been launched</div>
+                     }
+                    </>
                     :
-                    <button onClick={launchCall} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-2 font-semibold bg-teal-800' type="submit">Launch a Call</button>
+                    <>
+                       
+                        <button onClick={launchCall} className='hover:bg-opacity-80 mt-7 text-white rounded-[10px] p-2 font-semibold bg-teal-800' type="submit">Launch a Call</button>
+                      
+                    </>
                   )
                   :
                   (<div>Next Video Consultation in <span className="font-bold text-teal-800">{ new Date(timeLeft).getHours() > 0  && <span>{new Date(timeLeft).getHours()} hours</span>} {new Date(timeLeft).getMinutes()}mins</span> </div>)
@@ -232,19 +276,19 @@ function Consultations() {
               </div>
               <h2 className='text-[28px] font-semibold'>Consultation History</h2>
           <TableContainer component={Paper}>
-          <Table>
+          <Table className='border'>
             <TableHead>
-              <TableRow className='bg-blue-900'>
-              <TableCell style={{color: "white", fontWeight: 700}}>ID</TableCell>
-              <TableCell style={{color: "white", fontWeight: 700}}>Consultation Details</TableCell>
-              <TableCell style={{color: "white", fontWeight: 700}}>
+              <TableRow>
+              <TableCell style={{fontWeight: 700}}>ID</TableCell>
+              <TableCell style={{fontWeight: 700}}>Consultation Details</TableCell>
+              <TableCell style={{fontWeight: 700}}>
                 {
                   roleLabel === "PATIENT" ? "DOCTOR" : "PATIENT"
                 }
               </TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Consultation Date</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Status</TableCell>
-            <TableCell style={{color: "white", fontWeight: 700}}>Action</TableCell>
+            <TableCell style={{fontWeight: 700}}>Consultation Date</TableCell>
+            <TableCell style={{fontWeight: 700}}>Status</TableCell>
+            <TableCell style={{fontWeight: 700}}>Action</TableCell>
             </TableRow>
             </TableHead>
             <TableBody>

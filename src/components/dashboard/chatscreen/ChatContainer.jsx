@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import "../../../css/chatcontainer.css"
 import Header from './Header'
 import MessageInput from "../inputs/MessageInput"
-import {HeartBroken, Send, SentimentSatisfied, AttachFile } from '@mui/icons-material'
+import {HeartBroken, Send, SentimentSatisfied, AttachFile, Close } from '@mui/icons-material'
+import {IconButton} from "@mui/material";
 import MessageContainer from './MessageContainer'
-import { correctTime, sortContacts, unShiftContacts } from '../../../utils/scripts/script'
 import { UpdateContext } from '../../../utils/context/UpdateContext'
 import axiosInstance from '../../../utils/axiosInstance/axiosInstance'
 import { io } from 'socket.io-client'
@@ -14,6 +14,8 @@ import { Spinner } from 'reactstrap'
 import {useDispatch, useSelector} from "react-redux";
 import {useQuery, useQueryClient} from "@tanstack/react-query"
 import {setCurrentUser, setCurrentContactOrder, setCurrentConversation, getActiveUser, addConversation, setReadMessages} from "../../../utils/toolkit/slices/app/appSlice";
+import Picker from "@emoji-mart/react"
+import data from "@emoji-mart/data"
 
 function ChatContainer({contact, setOrder}) {
   const dispatch = useDispatch()
@@ -24,6 +26,8 @@ function ChatContainer({contact, setOrder}) {
   const activeUser = JSON.parse(localStorage.getItem("user"))
   const bottom = useRef(null)
   const [socket, setSocket] = useState()
+
+  // const openEmojiContainer = () => <Picker data={data} onEmojiSelect={(e) => console.log("EMOJI: ", e)} />
 
   const makeChanges = () => {
     dispatch(getActiveUser())
@@ -39,6 +43,8 @@ function ChatContainer({contact, setOrder}) {
       queryClient.invalidateQueries({queryKey: ["make-changes"]})
     }, 500);
   }, [])
+
+  const [showPicker, setShowPicker] = useState(false)
 
   useEffect(() => {
     const socketIO = io('http://localhost:5000', {
@@ -171,7 +177,7 @@ function ChatContainer({contact, setOrder}) {
         :
         <>
         <Header 
-      image={currentUser?.image} 
+      image={axiosInstance.getUri() + currentUser?.image} 
       name={currentUser?.fullname} 
       lastSeen="" 
       />
@@ -196,10 +202,21 @@ function ChatContainer({contact, setOrder}) {
               )
             })
           }
-          <div ref={bottom}></div>
+          {/* <div ref={bottom}></div> */}
         </div>}
-      <div className="send-message-container shadow-xl text-white">
+        {
+        showPicker && 
+        <div className='absolute bottom-20 bg-black p-2'>
+          <IconButton onClick={() => setShowPicker(!showPicker)} className='flex self-end'>
+              <Close sx={{color: "white"}} />
+          </IconButton>
+          <Picker data={data} onEmojiSelect={(e) => setChatMessage(chatMessage+e.native)} />
+        </div>
+        }
+      <div className="send-message-container shadow-xl text-gray-700">
+            <IconButton onClick={() => setShowPicker(!showPicker)}>
             <SentimentSatisfied className='icons'/>
+            </IconButton>
             <label className="cursor-pointer" htmlFor="attachment">
                 <AttachFile />
             </label>
@@ -208,11 +225,11 @@ function ChatContainer({contact, setOrder}) {
              value={chatMessage}
              onChangeHandler={(e) => setChatMessage(e.target.value)}
              sendHandler={(e) => sendChatMessage(e)}
-            className="input-message text-white" 
+            className="input-message" 
             type="text" 
             placeholder="Mesage"
             />
-           { isSending ? <Spinner /> : <Send className='icons' onClick={() => sendMessage()} />}
+           { isSending ? <Spinner /> : <Send className='icons bg-blue-800 rounded-full text-white p-2' sx={{fontSize: "40px"}} onClick={() => sendMessage()} />}
       </div>
       </>
       }

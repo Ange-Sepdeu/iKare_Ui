@@ -7,12 +7,16 @@ function SingleContact({src, onClickHandler,
   contactHeader, contactLastMessage, chatTime, unReadMessages}) {
   return (
     <>
-    <div className={`flex justify-between items-center p-2 border-b-2 border-teal-800 hover:bg-gray-100 cursor-pointer`} onClick={onClickHandler}>
-             <div className='w-1/12'>
+    <div className={`flex justify-between gap-2 items-center p-3 border-b-2 border-teal-800 hover:bg-gray-100 cursor-pointer`} onClick={onClickHandler}>
+             <div>
              {
                src ? 
-               <img 
-             src={src} 
+               <Avatar
+             src={src}
+             sx={{
+              width:50,
+              height:50
+             }} 
              alt="Contact Profile pic" 
              />:
              <Avatar sx={{color:"white", backgroundColor:"teal"}} />

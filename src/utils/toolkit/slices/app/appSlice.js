@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../../axiosInstance/axiosInstance"
+import axios from "axios";
 
 const initialState = {
     activeTab: 0,
@@ -7,7 +8,8 @@ const initialState = {
     loading: false,
     activeUserNotifications: null,
     currentConversation: null,
-    currentContactOrder: []
+    currentContactOrder: [],
+    currentBotConversation: []
 }
 
 export const setReadMessages = createAsyncThunk(
@@ -45,6 +47,18 @@ export const getActiveUser = createAsyncThunk(
             return response.data
         } catch(error) {
             thunkAPI.rejectWithValue(error.response.data)
+        }
+    }
+)
+
+export const getBotResponse = createAsyncThunk(
+    "appSlice/getBotResponse", async (request, thunkAPI) => {
+        try {   
+            const apiUrl = "http://127.0.0.1:8000/api/diseases/";
+            const response = await axios.post(apiUrl, request);
+            return response.data;
+        } catch(error) {
+            return thunkAPI.rejectWithValue(error.message)
         }
     }
 )
